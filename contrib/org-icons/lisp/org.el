@@ -5105,63 +5105,7 @@ When FACE-OR-COLOR is not a string, just return it."
 			   (list 'face (org-get-tag-face 1)
 				 'font-lock-fontified t))
       (backward-char 1))))
-
-(defun org-font-lock-add-todo-state-faces (limit)
-  "Add the todo state faces."
-  (let ((re-heading 
-	 (concat "^\\(\\**\\)\\(\\*[ \t]+\\)" org-todo-regexp "\\([ \t]\\|$\\)"))
-	(re-done
-	 (concat "^[*]+ +\\<\\("
-		 (mapconcat 'regexp-quote org-done-keywords "\\|")
-		 "\\)\\(.*\\)")))
-      (while (re-search-forward re-heading limit t)
-	(add-text-properties (match-beginning 3) (match-end 3)
-			     '('face (org-get-todo-face 1) 'font-lock-fontified t))
-	(if org-icons-mode
-	    (let* ((state (match-string 3))
-		   (tags (org-get-tags-at))
-		   (priority
-		    (org-get-priority (buffer-substring (point) (point-at-eol))))
-		   (icon (org-todo-state-icon-at state priority tags)))
-	      (when icon
-		(org-draw-icon (match-beginning 2) (match-end 3) icon)))))
-    ))
        
-(defun org-font-lock-add-special-keyword-faces (limit)
-  (let ((re (concat "\\<\\(" org-scheduled-string 
-		    "\\|" org-deadline-string 
-		    "\\|" org-closed-string "\\)")))
-    (while (re-search-forward re limit t)
-      (add-text-properties (match-beginning 0) (match-end 0) 
-			   (list 'face 'org-special-keyword 'font-lock-fontified t))
-      (if org-icons-mode
-	  (let ((keyword (match-string 1)))
-	    (org-draw-icon (match-beginning 0) (match-end 0) 
-		       (org-special-keyword-icon-at keyword))))
-)))
-
-(defun org-font-lock-add-drawer-faces (limit)
-  "Add the drawer faces."
-  (save-excursion
-    (while (re-search-forward org-drawer-regexp limit t)
-      (add-text-properties 
-       (match-beginning 0) (match-end 0) 
-       (list 'face 'org-special-keyword 'font-lock-fontified t))
-      (if org-icons-mode
-	  (let* ((name (match-string 1))
-		 (tags (org-get-tags-at))
-		 (icon (org-drawer-icon-at name nil)))
-	    (when icon
-	      (org-draw-icon (1-(match-beginning 1)) (1+ (match-end 1)) icon))))
-      ))
-  (while (re-search-forward "^[ \t]*\\(:END:\\)" limit t)
-    (add-text-properties 
-     (match-beginning 0) (match-end 0) (list 'face 'org-special-keyword 'font-lock-fontified t))
-    (if org-icons-mode
-	(org-draw-icon (match-beginning 1) (match-end 1) 
-		       (org-drawer-icon-at nil t)))
-    ))
-
 (defun org-font-lock-add-priority-faces (limit)
   "Add the special priority faces."
   (when (re-search-forward "\\[#\\([A-Z0-9]\\)\\]" limit t)
