@@ -1,0 +1,180 @@
+--- lisp/org.el.orig	2010-03-13 00:40:33.798985209 +0100
++++ lisp/org.el	2010-03-15 12:18:24.356467186 +0100
+@@ -313,6 +313,15 @@
+   :group 'org-startup
+   :type 'boolean)
+ 
++(defcustom org-startup-with-icons-mode nil
++  "Non-nil means turn on `org-icons-mode' on startup.
++This can also be configured on a per-file basis by adding one of
++the following lines anywhere in the buffer:
++
++   #+STARTUP: icons"
++  :group 'org-startup
++  :type 'boolean)
++
+ (defcustom org-startup-indented nil
+   "Non-nil means turn on `org-indent-mode' on startup.
+ This can also be configured on a per-file basis by adding one of
+@@ -3450,6 +3459,17 @@
+    "org-feed"
+    '(org-feed-update org-feed-update-all org-feed-goto-inbox)))
+ 
++;; Autoload org-icons.el
++
++;; Define the variable already here, to make sure we have it.
++(defvar org-icons-mode nil
++  "Non-nil if Org-Icons mode is enabled.
++Use the command `org-icons-mode' to change this variable.")
++
++(eval-and-compile
++  (org-autoload
++   "org-icons"
++   '(org-icons-mode)))
+ 
+ ;; Autoload org-indent.el
+ 
+@@ -3805,7 +3825,8 @@
+     ("noptag" org-tag-persistent-alist nil)
+     ("hideblocks" org-hide-block-startup t)
+     ("nohideblocks" org-hide-block-startup nil)
+-    ("beamer" org-startup-with-beamer-mode t))
++    ("beamer" org-startup-with-beamer-mode t)
++    ("icons" org-startup-with-icons-mode t))
+   "Variable associated with STARTUP options for org-mode.
+ Each element is a list of three items: The startup options as written
+ in the #+STARTUP line, the corresponding variable, and the value to
+@@ -4334,6 +4355,9 @@
+     (when org-startup-indented
+       (require 'org-indent)
+       (org-indent-mode 1))
++    (when org-startup-with-icons-mode
++      (require 'org-icons)
++      (org-icons-mode 1))
+     (unless org-inhibit-startup-visibility-stuff
+       (org-set-startup-visibility))))
+ 
+@@ -4962,8 +4986,7 @@
+ 	   '("^[ \t]*|\\( *\\([$!_^/]\\) *|.*\\)|" (1 'org-formula t))
+ 	   '("| *\\(<[lr]?[0-9]*>\\)" (1 'org-formula t))
+ 	   ;; Drawers
+-	   (list org-drawer-regexp '(0 'org-special-keyword t))
+-	   (list "^[ \t]*:END:" '(0 'org-special-keyword t))
++	   '(org-font-lock-add-drawer-faces)
+ 	   ;; Properties
+ 	   (list org-property-re
+ 		 '(1 'org-special-keyword t)
+@@ -4979,9 +5002,8 @@
+ 				     (2 'org-footnote t)))
+ 	   '("^&?%%(.*\\|<%%([^>\n]*?>" (0 'org-sexp-date t))
+ 	   '(org-hide-wide-columns (0 nil append))
+-	   ;; TODO lines
+-	   (list (concat "^\\*+[ \t]+" org-todo-regexp "\\([ \t]\\|$\\)")
+-		 '(1 (org-get-todo-face 1) t))
++	   ;; TODO states
++	   '(org-font-lock-add-todo-state-faces)
+ 	   ;; DONE
+ 	   (if org-fontify-done-headline
+ 	       (list (concat "^[*]+ +\\<\\("
+@@ -4994,10 +5016,7 @@
+ 	   ;; Tags
+ 	   '(org-font-lock-add-tag-faces)
+ 	   ;; Special keywords
+-	   (list (concat "\\<" org-deadline-string) '(0 'org-special-keyword t))
+-	   (list (concat "\\<" org-scheduled-string) '(0 'org-special-keyword t))
+-	   (list (concat "\\<" org-closed-string) '(0 'org-special-keyword t))
+-	   (list (concat "\\<" org-clock-string) '(0 'org-special-keyword t))
++	   '(org-font-lock-add-special-keyword-faces)
+ 	   ;; Emphasis
+ 	   (if em
+                (if (featurep 'xemacs)
+@@ -5083,9 +5102,65 @@
+ 				 'font-lock-fontified t))
+       (backward-char 1))))
+ 
++(defun org-font-lock-add-todo-state-faces (limit)
++  "Add the todo state faces."
++  (let ((re-heading 
++	 (concat "^\\(\\**\\)\\(\\*[ \t]+\\)" org-todo-regexp "\\([ \t]\\|$\\)"))
++	(re-done
++	 (concat "^[*]+ +\\<\\("
++		 (mapconcat 'regexp-quote org-done-keywords "\\|")
++		 "\\)\\(.*\\)")))
++      (while (re-search-forward re-heading limit t)
++	(add-text-properties (match-beginning 3) (match-end 3)
++			     '('face (org-get-todo-face 1) 'font-lock-fontified t))
++	(if org-icons-mode
++	    (let* ((state (match-string 3))
++		   (tags (org-get-tags-at))
++		   (priority
++		    (org-get-priority (buffer-substring (point) (point-at-eol))))
++		   (icon (org-todo-state-icon-at state priority tags)))
++	      (when icon
++		(org-draw-icon (match-beginning 2) (match-end 3) icon)))))
++    ))
++       
++(defun org-font-lock-add-special-keyword-faces (limit)
++  (let ((re (concat "\\<\\(" org-scheduled-string 
++		    "\\|" org-deadline-string 
++		    "\\|" org-closed-string "\\)")))
++    (while (re-search-forward re limit t)
++      (add-text-properties (match-beginning 0) (match-end 0) 
++			   (list 'face 'org-special-keyword 'font-lock-fontified t))
++      (if org-icons-mode
++	  (let ((keyword (match-string 1)))
++	    (org-draw-icon (match-beginning 0) (match-end 0) 
++		       (org-special-keyword-icon-at keyword))))
++)))
++
++(defun org-font-lock-add-drawer-faces (limit)
++  "Add the drawer faces."
++  (save-excursion
++    (while (re-search-forward org-drawer-regexp limit t)
++      (add-text-properties 
++       (match-beginning 0) (match-end 0) 
++       (list 'face 'org-special-keyword 'font-lock-fontified t))
++      (if org-icons-mode
++	  (let* ((name (match-string 1))
++		 (tags (org-get-tags-at))
++		 (icon (org-drawer-icon-at name nil)))
++	    (when icon
++	      (org-draw-icon (1-(match-beginning 1)) (1+ (match-end 1)) icon))))
++      ))
++  (while (re-search-forward "^[ \t]*\\(:END:\\)" limit t)
++    (add-text-properties 
++     (match-beginning 0) (match-end 0) (list 'face 'org-special-keyword 'font-lock-fontified t))
++    (if org-icons-mode
++	(org-draw-icon (match-beginning 1) (match-end 1) 
++		       (org-drawer-icon-at nil t)))
++    ))
++
+ (defun org-font-lock-add-priority-faces (limit)
+   "Add the special priority faces."
+-  (while (re-search-forward "\\[#\\([A-Z0-9]\\)\\]" limit t)
++  (when (re-search-forward "\\[#\\([A-Z0-9]\\)\\]" limit t)
+     (add-text-properties
+      (match-beginning 0) (match-end 0)
+      (list 'face (or (org-face-from-face-or-color
+@@ -5093,7 +5168,13 @@
+ 		      (cdr (assoc (char-after (match-beginning 1))
+ 				  org-priority-faces)))
+ 		     'org-special-keyword)
+-	   'font-lock-fontified t))))
++	   'font-lock-fontified t))
++    (if org-icons-mode
++	(let* ((pri (match-string 1))
++	       (icon (org-priority-icon-at pri)))
++	  (when icon 
++	    (org-draw-icon (1-(1-(match-beginning 1))) (1+(match-end 1)) icon))))
++    ))
+ 
+ (defun org-get-tag-face (kwd)
+   "Get the right face for a TODO keyword KWD.
+@@ -6195,6 +6276,7 @@
+ 	     (t
+ 	      (or split (end-of-line 1))
+ 	      (newline (if blank 2 1)))))))
++	(remove-text-properties 0 (length head) '(display) head)
+ 	(insert head) (just-one-space)
+ 	(setq pos (point))
+ 	(end-of-line 1)
