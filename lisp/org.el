@@ -6238,8 +6238,8 @@ Optional argument N means put the headline into the Nth line of the window."
 
 (defun org-outline-overlay-data (&optional use-markers)
   "Return a list of the locations of all outline overlays.
-The are overlays with the `invisible' property value `outline'.
-The return values is a list of cons cells, with start and stop
+These are overlays with the `invisible' property value `outline'.
+The return value is a list of cons cells, with start and stop
 positions for each overlay.
 If USE-MARKERS is set, return the positions as markers."
   (let (beg end)
