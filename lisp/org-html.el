@@ -1680,10 +1680,12 @@ lang=\"%s\" xml:lang=\"%s\">
 
 (defun org-export-html-format-image (src par-open)
   "Create image tag with source and attributes."
+  (let ((tag (if (string= (file-name-extension src) "svg")
+		 "embed" "img")))
   (save-match-data
     (if (string-match "^ltxpng/" src)
-	(format "<img src=\"%s\" alt=\"%s\"/>"
-                src (org-find-text-property-in-string 'org-latex-src src))
+	(format "<%s src=\"%s\" alt=\"%s\"/>"
+                tag src (org-find-text-property-in-string 'org-latex-src src))
       (let* ((caption (org-find-text-property-in-string 'org-caption src))
 	     (attr (org-find-text-property-in-string 'org-attributes src))
 	     (label (org-find-text-property-in-string 'org-label src)))
@@ -1694,8 +1696,8 @@ lang=\"%s\" xml:lang=\"%s\">
 <p>"
 		    (if org-par-open "</p>\n" "")
 		    (if label (format "id=\"%s\" " label) "")))
-	(format "<img src=\"%s\"%s />"
-		src
+	(format "<%s src=\"%s\"%s />"
+		tag src
 		(if (string-match "\\<alt=" (or attr ""))
 		    (concat " " attr )
 		  (concat " " attr " alt=\"" src "\"")))
@@ -1703,7 +1705,7 @@ lang=\"%s\" xml:lang=\"%s\">
 	    (format "</p>%s
 </div>%s"
 		(concat "\n<p>" caption "</p>")
-		(if org-par-open "\n<p>" ""))))))))
+		(if org-par-open "\n<p>" "")))))))))
 
 (defun org-export-html-get-bibliography ()
   "Find bibliography, cut it out and return it."
