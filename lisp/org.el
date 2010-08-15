@@ -18268,7 +18268,7 @@ really on, so that the block visually is on the match."
 	nil))))
 
 (defun org-in-regexps-block-p (start-re end-re &optional bound)
-  "Returns t if the current point is between matches of START-RE and END-RE.
+  "Return t if the current point is between matches of START-RE and END-RE.
 This will also return t if point is on one of the two matches or
 in an unfinished block. END-RE can be a string or a form
 returning a string.
