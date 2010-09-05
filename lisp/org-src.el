@@ -109,6 +109,12 @@ editing it with \\[org-edit-src-code].  Has no effect if
   :group 'org-edit-structure
   :type 'integer)
 
+(defcustom org-src-strip-leading-and-trailing-blank-lines t
+  "If non-nil, blank lines are removed when exiting the code edit
+buffer."
+  :group 'org-edit-structure
+  :type 'boolean)
+
 (defcustom org-edit-src-persistent-message t
   "Non-nil means show persistent exit help message while editing src examples.
 The message is shown in the header-line, which will be created in the
@@ -577,11 +583,12 @@ the language, a switch telling if the content should be in a single line."
 	 (delta 0) code line col indent)
     (when allow-write-back-p
       (unless preserve-indentation (untabify (point-min) (point-max)))
-      (save-excursion
-	(goto-char (point-min))
-	(if (looking-at "[ \t\n]*\n") (replace-match ""))
-	(unless macro
-	  (if (re-search-forward "\n[ \t\n]*\\'" nil t) (replace-match "")))))
+      (if org-src-strip-leading-and-trailing-blank-lines
+	  (save-excursion
+	    (goto-char (point-min))
+	    (if (looking-at "[ \t\n]*\n") (replace-match ""))
+	    (unless macro
+	      (if (re-search-forward "\n[ \t\n]*\\'" nil t) (replace-match ""))))))
     (setq line (if (org-bound-and-true-p org-edit-src-force-single-line)
 		   1
 		 (org-current-line))
