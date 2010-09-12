@@ -11228,13 +11228,12 @@ its results into the Org-mode buffer.
 
 It is also possible to evaluate named code blocks from anywhere in an
 Org-mode buffer or an Org-mode table.  @code{#+call} (or synonymously
-@code{#+function} or @code{#+lob}) lines can be used to remotely execute code
-blocks located in the current Org-mode buffer or in the ``Library of Babel''
-(see @ref{Library of Babel}).  These lines use the following syntax.
+@code{#+lob}) lines can be used to remotely execute code blocks located in
+the current Org-mode buffer or in the ``Library of Babel'' (see @ref{Library
+of Babel}).  These lines use the following syntax.
 
 @example
 #+call: <name>(<arguments>) <header arguments>
-#+function: <name>(<arguments>) <header arguments>
 #+lob: <name>(<arguments>) <header arguments>
 @end example
 
