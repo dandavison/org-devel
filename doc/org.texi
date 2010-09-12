@@ -11092,16 +11092,20 @@ The source code.
 @cindex code block, editing
 @cindex source code, editing
 
+Source code can be edited either directly in the Org buffer, or in a special
+language major mode edit buffer.
+
+@Subsection Editing in a language major mode buffer
+
 @kindex C-c '
-Use @kbd{C-c '} to edit the current code block. This brings up
-a language major-mode edit buffer containing the body of the code
-block. Saving this buffer will write the new contents back to the Org
+Use @kbd{C-c '} to edit the current code block in a language major-mode edit
+buffer. Saving this buffer will write the new contents back to the Org
 buffer. Use @kbd{C-c '} again to exit.
 
 The @code{org-src-mode} minor mode will be active in the edit buffer. The
 following variables can be used to configure the behavior of the edit
-buffer. See also the customization group @code{org-src} for further
-configuration options.
+buffer. See the customization group @code{org-src} for further configuration
+options.
 
 @table @code
 @item org-src-lang-modes
@@ -11114,10 +11118,10 @@ Controls the way Emacs windows are rearranged when the edit buffer is created.
 @item org-src-preserve-indentation
 This variable is especially useful for tangling languages such as
 python, in which whitespace indentation in the output is critical.
-@item org-src-ask-before-returning-to-edit-buffer
-By default, Org will ask before returning to an open edit buffer. Set
-this variable to nil to switch without asking.
 @end table
+
+@Subsection Editing code in the Org buffer
+
 
 @comment  node-name,  next,  previous,  up
 @comment  Exporting code blocks, Extracting source code, Editing source code, Working With Source Code
