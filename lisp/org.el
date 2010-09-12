@@ -5026,7 +5026,7 @@ will be prompted for."
   "When non-nil, fontify code in code blocks."
   :type 'boolean
   :group 'org-appearance
-  :group 'org-babel)
+  :group 'org-src)
 
 (defun org-fontify-meta-lines-and-blocks (limit)
   "Fontify #+ lines and blocks, in the correct ways."

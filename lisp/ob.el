@@ -71,8 +71,8 @@
 
 (defgroup org-babel nil
   "Code block evaluation and management in `org-mode' documents."
-  :tag "Babel"
-  :group 'org)
+  :tag "Org Babel"
+  :group 'org-src)
 
 (defcustom org-confirm-babel-evaluate t
   "Confirm before evaluation.

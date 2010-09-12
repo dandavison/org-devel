@@ -44,13 +44,18 @@
 (declare-function org-get-indentation "org" (&optional line))
 (declare-function org-switch-to-buffer-other-window "org" (&rest args))
 
+(defgroup org-src nil
+  "Source code and literal example blocks in `org-mode' documents."
+  :tag "Org Source Code Blocks and Org-Babel"
+  :group 'org)
+
 (defcustom org-edit-src-region-extra nil
   "Additional regexps to identify regions for editing with `org-edit-src-code'.
 For examples see the function `org-edit-src-find-region-and-lang'.
 The regular expression identifying the begin marker should end with a newline,
 and the regexp marking the end line should start with a newline, to make sure
 there are kept outside the narrowed region."
-  :group 'org-edit-structure
+  :group 'org-src
   :type '(repeat
 	  (list
 	   (regexp :tag "begin regexp")
@@ -75,13 +80,13 @@ If you want to use this for HTML export, make sure that the format does
 not introduce special font-locking, and avoid the HTML special
 characters `<', `>', and `&'.  The reason for this restriction is that
 the labels are searched for only after htmlize has done its job."
-  :group 'org-edit-structure ; FIXME this is not in the right group
+  :group 'org-src
   :type 'string)
 
 (defcustom org-edit-fixed-width-region-mode 'artist-mode
   "The mode that should be used to edit fixed-width regions.
 These are the regions where each line starts with a colon."
-  :group 'org-edit-structure
+  :group 'org-src
   :type '(choice
 	  (const artist-mode)
 	  (const picture-mode)
@@ -97,7 +102,7 @@ then, after editing with \\[org-edit-src-code], the
 minimum (across-lines) number of leading whitespace characters
 are removed from all lines, and the code block is uniformly
 indented according to the value of `org-edit-src-content-indentation'."
-  :group 'org-edit-structure
+  :group 'org-src
   :type 'boolean)
 
 (defcustom org-edit-src-content-indentation 2
@@ -106,7 +111,7 @@ This should be the number of spaces added to the indentation of the #+begin
 line in order to compute the indentation of the block content after
 editing it with \\[org-edit-src-code].  Has no effect if
 `org-src-preserve-indentation' is non-nil."
-  :group 'org-edit-structure
+  :group 'org-src
   :type 'integer)
 
 (defcustom org-edit-src-persistent-message t
@@ -114,7 +119,7 @@ editing it with \\[org-edit-src-code].  Has no effect if
 The message is shown in the header-line, which will be created in the
 first line of the window showing the editing buffer.
 When nil, the message will only be shown intermittently in the echo area."
-  :group 'org-edit-structure
+  :group 'org-src
   :type 'boolean)
 
 (defcustom org-src-window-setup 'reorganize-frame
@@ -129,7 +134,7 @@ reorganize-frame  Show only two windows on the current frame, the current
                   return to one window.
 other-frame       Use `switch-to-buffer-other-frame' to display edit buffer.
                   Also, when exiting the edit buffer, kill that frame."
-  :group 'org-edit-structure
+  :group 'org-src
   :type '(choice
 	  (const current-window)
 	  (const other-frame)
@@ -157,7 +162,7 @@ simple, but for language where this is not the case, this variable
 provides a way to simplify things on the user side.
 For example, there is no ocaml-mode in Emacs, but the mode to use is
 `tuareg-mode'."
-  :group 'org-edit-structure
+  :group 'org-src
   :type '(repeat
 	  (cons
 	   (string "Language name")
