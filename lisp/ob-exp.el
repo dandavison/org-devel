@@ -49,7 +49,7 @@
 
 (defcustom org-export-babel-evaluate t
   "Switch controlling code evaluation during export.
-When set to nil no code will be exported as part of the export
+When set to nil no code will be evaluated as part of the export
 process."
   :group 'org-babel
   :type 'boolean)
