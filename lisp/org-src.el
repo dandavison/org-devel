@@ -183,11 +183,13 @@ For example, there is no ocaml-mode in Emacs, but the mode to use is
 (defvar org-edit-src-block-indentation nil)
 (defvar org-edit-src-saved-temp-window-config nil)
 
-(defvar org-src-ask-before-returning-to-edit-buffer t
+(defcustom org-src-ask-before-returning-to-edit-buffer t
   "If nil, when org-edit-src code is used on a block that already
   has an active edit buffer, it will switch to that edit buffer
   immediately; otherwise it will ask whether you want to return
-  to the existing edit buffer.")
+  to the existing edit buffer."
+  :group 'org-src
+  :type 'boolean)
 
 (defvar org-src-babel-info nil)
 
@@ -723,9 +725,11 @@ Org-babel commands."
      (call-interactively
       (lookup-key org-babel-map key)))))
 
-(defvar org-src-tab-acts-natively nil
+(defcustom org-src-tab-acts-natively nil
   "If non-nil, the effect of TAB in a code block is as if it were
-issued in the language major mode buffer.")
+issued in the language major mode buffer."
+  :group 'org-src
+  :type 'boolean)
 
 (defun org-src-native-tab-command-maybe ()
   "Perform language-specific TAB action.
