@@ -78,7 +78,7 @@ This function is called by `org-babel-execute-src-block'."
                       (if out-file
                           (concat "-globalwrite -f " format " -o " out-file)
                         "-V")
-                      " " cmdline " " in-file)))
+                      " " cmdline " " (org-babel-prepare-file-name-for-shell in-file))))
     (with-temp-file in-file
       (insert (org-babel-expand-body:asymptote body params processed-params)))
     (message cmd) (shell-command cmd)

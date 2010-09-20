@@ -65,10 +65,11 @@ This function is called by `org-babel-execute-src-block'."
 			 (expand-file-name org-plantuml-jar-path))
 			" -p " cmdline " < "
 			(shell-quote-argument
-			 (expand-file-name in-file))
+			 (expand-file-name (org-babel-prepare-file-name-for-shell in-file)))
 			" > "
 			(shell-quote-argument
-			 (expand-file-name out-file))))))
+			 (expand-file-name
+			  (org-babel-prepare-file-name-for-shell out-file)))))))
     (unless (file-exists-p org-plantuml-jar-path)
       (error "Could not find plantuml.jar at %s" org-plantuml-jar-path))
     (with-temp-file in-file (insert (concat "@startuml\n" body "\n@enduml")))

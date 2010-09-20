@@ -222,7 +222,7 @@ last statement in BODY, as elisp."
 				(org-remove-indentation
 				 (org-babel-trim body))
 				"[\r\n]") "\n")
-			      tmp-file))
+			      (org-babel-prepare-file-name-for-shell tmp-file)))
 	     ((lambda (raw)
 		(if (or (member "code" result-params)
 			(member "pp" result-params))
@@ -270,7 +270,8 @@ last statement in BODY, as elisp."
 	      (session org-babel-python-eoe-indicator t body)
 	    (let ((comint-process-echoes nil))
 	      (input-body body)
-	      (dump-last-value tmp-file (member "pp" result-params))
+	      (dump-last-value (org-babel-prepare-file-name-for-shell tmp-file)
+			       (member "pp" result-params))
 	      (comint-send-input) (comint-send-input)
 	      (insert org-babel-python-eoe-indicator)
 	      (comint-send-input)))

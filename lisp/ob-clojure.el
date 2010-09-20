@@ -262,8 +262,9 @@ repl buffer."
     (case result-type
       (output (org-babel-eval cmd body))
       (value (let* ((tmp-file (org-babel-temp-file "clojure-results-")))
-	       (org-babel-eval cmd (format org-babel-clojure-wrapper-method
-					   body tmp-file tmp-file))
+	       (org-babel-eval
+		cmd (format org-babel-clojure-wrapper-method
+			    body (org-babel-prepare-file-name-for-shell tmp-file) tmp-file))
 	       (org-babel-clojure-table-or-string
 		(org-babel-eval-read-file tmp-file)))))))
 

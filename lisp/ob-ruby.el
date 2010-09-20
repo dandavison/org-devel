@@ -185,12 +185,13 @@ return the value of the last statement in BODY, as elisp."
       ;; external process evaluation
       (case result-type
 	(output (org-babel-eval org-babel-ruby-command body))
-	(value (let ((tmp-file (org-babel-temp-file "ruby-results-")))
-		 (org-babel-eval org-babel-ruby-command
-				 (format (if (member "pp" result-params)
-					     org-babel-ruby-pp-wrapper-method
-					   org-babel-ruby-wrapper-method)
-					 body tmp-file))
+	(value (let ((tmp-file (org-babel-temp-file "ruby-")))
+		 (org-babel-eval
+		  org-babel-ruby-command
+		  (format (if (member "pp" result-params)
+			      org-babel-ruby-pp-wrapper-method
+			    org-babel-ruby-wrapper-method)
+			  body (org-babel-prepare-file-name-for-shell tmp-file)))
 		 ((lambda (raw)
 		    (if (or (member "code" result-params)
 			    (member "pp" result-params))
@@ -232,7 +233,8 @@ return the value of the last statement in BODY, as elisp."
 	     (append
 	      (list body)
 	      (if (not ppp)
-		  (list (format org-babel-ruby-f-write tmp-file))
+		  (list (format org-babel-ruby-f-write
+				(org-babel-prepare-file-name-for-shell tmp-file)))
 		(list
 		 "results=_" "require 'pp'" "orig_out = $stdout"
 		 (format org-babel-ruby-pp-f-write tmp-file)))

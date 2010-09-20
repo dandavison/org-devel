@@ -97,13 +97,14 @@ or `org-babel-execute:c++'."
 	    (with-temp-file tmp-src-file (insert full-body))
 	    (org-babel-eval
 	     (format "%s -o %s %s %s"
-		     (cond
-		      ((equal org-babel-c-variant 'c) org-babel-C-compiler)
-		      ((equal org-babel-c-variant 'cpp) org-babel-c++-compiler))
-		     tmp-bin-file
+		     (org-babel-prepare-file-name-for-shell
+		      (cond
+		       ((equal org-babel-c-variant 'c) org-babel-C-compiler)
+		       ((equal org-babel-c-variant 'cpp) org-babel-c++-compiler)))
+		     (org-babel-prepare-file-name-for-shell tmp-bin-file)
 		     (mapconcat 'identity
 				(if (listp flags) flags (list flags)) " ")
-		     tmp-src-file) ""))))
+		     (org-babel-prepare-file-name-for-shell tmp-src-file)) ""))))
     ((lambda (results)
        (org-babel-reassemble-table
 	(if (member "vector" (nth 2 processed-params))

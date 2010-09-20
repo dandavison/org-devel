@@ -110,7 +110,8 @@ return the value of the last statement in BODY, as elisp."
     (value (let ((tmp-file (org-babel-temp-file "perl-results-")))
 	     (org-babel-eval
 	      org-babel-perl-command
-	      (format org-babel-perl-wrapper-method body tmp-file))
+	      (format org-babel-perl-wrapper-method body
+		      (org-babel-prepare-file-name-for-shell tmp-file)))
 	     (org-babel-eval-read-file tmp-file)))))
 
 (provide 'ob-perl)

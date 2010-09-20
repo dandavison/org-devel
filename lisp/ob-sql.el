@@ -65,9 +65,13 @@ This function is called by `org-babel-execute-src-block'."
                        (org-babel-temp-file "sql-out-")))
          (command (case (intern engine)
                     ('mysql (format "mysql %s -e \"source %s\" > %s"
-                                    (or cmdline "") in-file out-file))
+                                    (or cmdline "")
+				    (org-babel-prepare-file-name-for-shell in-file)
+				    (org-babel-prepare-file-name-for-shell out-file)))
 		    ('postgresql (format "psql -A -P footer=off -F \"\t\"  -f %s -o %s %s"
-					 in-file out-file (or cmdline "")))
+				    (org-babel-prepare-file-name-for-shell in-file)
+				    (org-babel-prepare-file-name-for-shell out-file)
+				    (or cmdline "")))
                     (t (error "no support for the %s sql engine" engine)))))
     (with-temp-file in-file
       (insert (org-babel-expand-body:sql body params)))
