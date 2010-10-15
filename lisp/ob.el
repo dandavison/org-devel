@@ -396,13 +396,19 @@ block."
 		result))
 	  (setq call-process-region 'org-babel-call-process-region-original))))))
 
-(defun org-babel-expand-body:generic (body &optional var-lines)
+(defun org-babel-expand-body:generic (body params &optional lang)
   "Expand BODY with PARAMS.
 Expand a block of code with org-babel according to it's header
 arguments.  This generic implementation of body expansion is
 called for languages which have not defined their own specific
 org-babel-expand-body:lang function."
-  (mapconcat #'identity (append var-lines (list body)) "\n"))
+  (let ((vars (cdr (assoc :vars params))) cmd var-lines)
+    (when vars
+      (setq cmd (intern (concat "org-babel-variable-assignments:" lang)))
+      (unless (fboundp cmd)
+	(error "No org-babel-variable-assignments function for %S!" lang))
+      (setq var-lines (funcall cmd params)))
+    (mapconcat #'identity (append var-lines (list body)) "\n")))
 
 ;;;###autoload
 (defun org-babel-expand-src-block (&optional arg info params)
@@ -422,7 +428,7 @@ arguments and pop open the results in a preview buffer."
 			 (org-babel-expand-noweb-references info) (nth 1 info))))
          (cmd (intern (concat "org-babel-expand-body:" lang)))
          (expanded (funcall (if (fboundp cmd) cmd 'org-babel-expand-body:generic)
-                            body params)))
+                            body params lang)))
     (org-edit-src-code
      nil expanded (concat "*Org-Babel Preview " (buffer-name) "[ " lang " ]*"))))
 

@@ -46,26 +46,14 @@
   "Command used to invoke a shell.
 This will be passed to  `shell-command-on-region'")
 
-(defun org-babel-expand-body:sh (body params &optional processed-params)
-  "Expand BODY according to PARAMS, return the expanded body."
-  (let ((vars (nth 1 (or processed-params (org-babel-process-params params))))
-        (sep (cdr (assoc :separator params))))
-    (concat
-   (mapconcat ;; define any variables
-    (lambda (pair)
-      (format "%s=%s"
-              (car pair)
-              (org-babel-sh-var-to-sh (cdr pair) sep)))
-    vars "\n") (if vars "\n" "") body "\n\n")))
-
 (defun org-babel-execute:sh (body params)
   "Execute a block of Shell commands with Babel.
 This function is called by `org-babel-execute-src-block'."
   (let* ((processed-params (org-babel-process-params params))
          (session (org-babel-sh-initiate-session (nth 0 processed-params)))
          (result-params (nth 2 processed-params)) 
-         (full-body (org-babel-expand-body:sh
-                     body params processed-params)))
+         (full-body (org-babel-expand-body:generic
+                     body (org-babel-sh-variable-assignments params))))
     (org-babel-reassemble-table
      (org-babel-sh-evaluate session full-body result-params)
      (org-babel-pick-name
@@ -76,14 +64,7 @@ This function is called by `org-babel-execute-src-block'."
 (defun org-babel-prep-session:sh (session params)
   "Prepare SESSION according to the header arguments specified in PARAMS."
   (let* ((session (org-babel-sh-initiate-session session))
-         (vars (org-babel-ref-variables params))
-         (sep (cdr (assoc :separator params)))
-         (var-lines (mapcar ;; define any variables
-                     (lambda (pair)
-                       (format "%s=%s"
-                               (car pair)
-                               (org-babel-sh-var-to-sh (cdr pair) sep)))
-                     vars)))
+	 (var-lines (org-babel-sh-variable-assignments params)))
     (org-babel-comint-in-buffer session
       (mapc (lambda (var)
               (insert var) (comint-send-input nil t)
@@ -100,6 +81,16 @@ This function is called by `org-babel-execute-src-block'."
       buffer)))
 
 ;; helper functions
+
+(defun org-babel-sh-variable-assignments (params)
+  "Return list of shell statements assigning the block's variables"
+  (let ((sep (cdr (assoc :separator params))))
+    (mapcar
+     (lambda (pair)
+       (format "%s=%s"
+	       (car pair)
+	       (org-babel-sh-var-to-sh (cdr pair) sep)))
+     (cdr (assoc :vars params)))))
 
 (defun org-babel-sh-var-to-sh (var &optional sep)
   "Convert an elisp value to a shell variable.

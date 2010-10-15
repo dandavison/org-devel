@@ -50,21 +50,11 @@
 (defvar org-babel-R-command "R --slave --no-save"
   "Name of command to use for executing R code.")
 
-(defun org-babel-expand-body:R (body params &optional processed-params)
+(defun org-babel-expand-body:R (body params)
   "Expand BODY according to PARAMS, return the expanded body."
-  (let* ((processed-params (or processed-params
-                               (org-babel-process-params params)))
-	 (vars (mapcar
-		(lambda (i)
-		  (cons (car (nth i (nth 1 processed-params)))
-			(org-babel-reassemble-table
-			 (cdr (nth i (nth 1 processed-params)))
-			 (cdr (nth i (nth 4 processed-params)))
-			 (cdr (nth i (nth 5 processed-params))))))
-		(number-sequence 0 (1- (length (nth 1 processed-params))))))
-         (out-file (cdr (assoc :file params))))
-    (mapconcat ;; define any variables
-     #'org-babel-trim
+  (let (out-file (cdr (assoc :file params)))
+    (mapconcat
+     #'identity
      ((lambda (inside)
 	(if out-file
 	    (append
@@ -72,15 +62,8 @@
 	     inside
 	     (list "dev.off()"))
 	  inside))
-      (append
-       (mapcar
-	(lambda (pair)
-	  (org-babel-R-assign-elisp
-	   (car pair) (cdr pair)
-	   (equal "yes" (cdr (assoc :colnames params)))
-	   (equal "yes" (cdr (assoc :rownames params)))))
-	vars)
-       (list body))) "\n")))
+      (append (org-babel-R-variable-assignments (cdr (assoc :vars params)))
+	      (list body))) "\n")))
 
 (defun org-babel-execute:R (body params)
   "Execute a block of R code.
@@ -93,7 +76,7 @@ This function is called by `org-babel-execute-src-block'."
 	   (colnames-p (cdr (assoc :colnames params)))
 	   (rownames-p (cdr (assoc :rownames params)))
 	   (out-file (cdr (assoc :file params)))
-	   (full-body (org-babel-expand-body:R body params processed-params))
+	   (full-body (org-babel-expand-body:R body params))
 	   (result
 	    (org-babel-R-evaluate
 	     session full-body result-type
@@ -107,14 +90,7 @@ This function is called by `org-babel-execute-src-block'."
 (defun org-babel-prep-session:R (session params)
   "Prepare SESSION according to the header arguments specified in PARAMS."
   (let* ((session (org-babel-R-initiate-session session params))
-	 (vars (org-babel-ref-variables params))
-	 (var-lines
-	  (mapcar
-	   (lambda (pair) (org-babel-R-assign-elisp
-		      (car pair) (cdr pair)
-		      (equal (cdr (assoc :colnames params)) "yes")
-		      (equal (cdr (assoc :rownames params)) "yes")))
-	   vars)))
+	 (var-lines (org-babel-R-variable-assignments params)))
     (org-babel-comint-in-buffer session
       (mapc (lambda (var)
               (end-of-line 1) (insert var) (comint-send-input nil t)
@@ -131,6 +107,24 @@ This function is called by `org-babel-execute-src-block'."
       buffer)))
 
 ;; helper functions
+
+(defun org-babel-R-variable-assignments (params)
+  "Return list of R statements assigning the block's variables"
+  (let ((vars (cdr (assoc :vars params))))
+    (mapcar
+     (lambda (pair)
+       (org-babel-R-assign-elisp
+	(car pair) (cdr pair)
+	(equal "yes" (cdr (assoc :colnames params)))
+	(equal "yes" (cdr (assoc :rownames params)))))
+     (mapcar
+      (lambda (i)
+	(cons (car (nth i vars))
+	      (org-babel-reassemble-table
+	       (cdr (nth i (nth 1 processed-params)))
+	       (cdr (nth i (nth 4 processed-params)))
+	       (cdr (nth i (nth 5 processed-params))))))
+      (number-sequence 0 (1- (length vars)))))))
 
 (defun org-babel-R-quote-tsv-field (s)
   "Quote field S for export to R."
