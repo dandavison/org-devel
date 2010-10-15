@@ -141,13 +141,22 @@ remove code block execution from the C-c C-c keybinding."
   "Get information on the current source block.
 
 Returns a list
- (language body header-arguments-alist switches name function-args indent)."
+ (language body header-arguments-alist switches name
+ function-args indent).
+
+header-arguments-alist contains an extra entry with key :vars,
+the value of which is an alist of (name . value) resolved
+variable pairs, as returned by `org-babel-ref-variables'. The
+original (unresolved) variable references are excluded from
+header-arguments-alist."
   (let ((case-fold-search t) head info name args indent)
     (if (setq head (org-babel-where-is-src-block-head))
         (save-excursion
 	  (goto-char head)
 	  (setq info (org-babel-parse-src-block-match))
 	  (setq indent (car (last info)))
+	  (setq info (butlast info))
+	  (setq switches (car (last info)))
 	  (setq info (butlast info))
 	  (forward-line -1)
 	  (when (and (looking-at org-babel-src-name-w-name-regexp)
@@ -158,13 +167,19 @@ Returns a list
 			  (lambda (ref) (cons :var ref))
 			  (org-babel-ref-split-args args)))
 	      (setf (nth 2 info)
-		    (org-babel-merge-params args (nth 2 info)))))
-	  (append info (list name args indent)))
+		    (org-babel-merge-params args (nth 2 info))))))
       (if (save-excursion ;; inline source block
             (re-search-backward "[ \f\t\n\r\v]" nil t)
             (looking-at org-babel-inline-src-block-regexp))
-          (org-babel-parse-inline-src-block-match)
-        nil))))
+          (setq info (org-babel-parse-inline-src-block-match))))
+    (list (nth 0 info)
+	  (nth 1 info)
+	  (append
+	   (delq nil
+		 (mapcar (lambda (pair) (unless (eq :var (car pair)) pair))
+			 (nth 2 info)))
+	   (list (cons :vars (org-babel-ref-variables (nth 2 info)))))
+	  switches name args indent)))
 
 (defun org-babel-confirm-evaluate (info)
   "Confirm evaluation of the code block INFO.
@@ -381,12 +396,13 @@ block."
 		result))
 	  (setq call-process-region 'org-babel-call-process-region-original))))))
 
-(defun org-babel-expand-body:generic (body params &optional processed-params)
+(defun org-babel-expand-body:generic (body &optional var-lines)
   "Expand BODY with PARAMS.
 Expand a block of code with org-babel according to it's header
 arguments.  This generic implementation of body expansion is
 called for languages which have not defined their own specific
-org-babel-expand-body:lang function." body)
+org-babel-expand-body:lang function."
+  (mapconcat #'identity (append var-lines (list body)) "\n"))
 
 ;;;###autoload
 (defun org-babel-expand-src-block (&optional arg info params)
@@ -872,7 +888,7 @@ may be specified at the top of the current buffer."
 Return a list (session vars result-params result-type colnames rownames)."
   (let* ((session (cdr (assoc :session params)))
          (vars-and-names (org-babel-disassemble-tables
-                          (org-babel-ref-variables params)
+                          params
                           (cdr (assoc :hlines params))
                           (cdr (assoc :colnames params))
                           (cdr (assoc :rownames params))))
