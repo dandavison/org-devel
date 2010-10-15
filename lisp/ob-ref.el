@@ -61,11 +61,9 @@
   "Convert PARAMS to variable names and values.
 Takes a parameter alist, and return an alist of variable names,
 and the emacs-lisp representation of the related value."
-  (let ((assignments
-	 (delq nil (mapcar (lambda (pair) (if (eq (car pair) :var) (cdr pair))) params)))
-	(others
-         (delq nil (mapcar (lambda (pair) (unless (eq :var (car pair)) pair)) params))))
-    (mapcar (lambda (assignment) (org-babel-ref-parse assignment)) assignments)))
+  (mapcar (lambda (assignment) (org-babel-ref-parse assignment))
+	  (delq nil (mapcar (lambda (pair) (if (eq (car pair) :var) (cdr pair)))
+			    params))))
 
 (defvar org-babel-ref-split-regexp
   "[ \f\t\n\r\v]*\\(.+?\\)[ \f\t\n\r\v]*=[ \f\t\n\r\v]*\\(.+\\)[ \f\t\n\r\v]*")
@@ -75,10 +73,9 @@ and the emacs-lisp representation of the related value."
 If the right hand side of the assignment has a literal value
 return that value, otherwise interpret as a reference to an
 external resource and find it's value using
-`org-babel-ref-resolve-reference'.  Return a list with two
-elements.  The first element of the list will be the name of the
-variable, and the second will be an emacs-lisp representation of
-the value of the variable."
+`org-babel-ref-resolve-reference'.  Return a cons cell. The car
+will be the name of the variable, and the cdr will be an
+emacs-lisp representation of the value of the variable."
   (if (string-match org-babel-ref-split-regexp assignment)
       (let ((var (match-string 1 assignment))
             (ref (match-string 2 assignment)))
