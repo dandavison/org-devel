@@ -9084,7 +9084,7 @@ Functions in this hook must return t if they identify and follow
 a link at point.  If they don't find anything interesting at point,
 they must return nil.")
 
-(defun org-open-at-point (&optional in-emacs reference-buffer)
+(defun org-open-at-point (&optional arg reference-buffer)
   "Open link at or after point.
 If there is no link at point, this function will search forward up to
 the end of the current line.
@@ -9107,7 +9107,7 @@ application the system uses for this file type."
 		       org-angle-link-re "\\|"
 		       "[ \t]:[^ \t\n]+:[ \t]*$")))
 	 (not (get-text-property (point) 'org-linked-text)))
-    (or (org-offer-links-in-entry in-emacs)
+    (or (org-offer-links-in-entry arg)
 	(progn (require 'org-attach) (org-attach-reveal 'if-exists))))
    ((run-hook-with-args-until-success 'org-open-at-point-functions))
    ((org-at-timestamp-p t) (org-follow-timestamp-link))
@@ -9212,7 +9212,7 @@ application the system uses for this file type."
 	  (browse-url (concat type ":" path)))
 
 	 ((string= type "tags")
-	  (org-tags-view in-emacs path))
+	  (org-tags-view arg path))
 
 	 ((string= type "tree-match")
 	  (org-occur (concat "\\[" (regexp-quote path) "\\]")))
@@ -9226,7 +9226,7 @@ application the system uses for this file type."
 		      path (substring path 0 (match-beginning 0)))))
 	  (if (string-match "[*?{]" (file-name-nondirectory path))
 	      (dired path)
-	    (org-open-file path in-emacs line search)))
+	    (org-open-file path arg line search)))
 
 	 ((string= type "shell")
 	  (let ((cmd path))
@@ -9258,14 +9258,14 @@ application the system uses for this file type."
 		'org-open-link-functions path)))
 
 	 ((string= type "thisfile")
-	  (if in-emacs
+	  (if arg
 	      (switch-to-buffer-other-window
 	       (org-get-buffer-for-internal-link (current-buffer)))
 	    (org-mark-ring-push))
 	  (let ((cmd `(org-link-search
 		       ,path
-		       ,(cond ((equal in-emacs '(4)) 'occur)
-			      ((equal in-emacs '(16)) 'org-occur)
+		       ,(cond ((equal arg '(4)) 'occur)
+			      ((equal arg '(16)) 'org-occur)
 			      (t nil))
 		       ,pos)))
 	    (condition-case nil (eval cmd)
