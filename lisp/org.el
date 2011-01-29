@@ -9093,8 +9093,6 @@ optional argument IN-EMACS is non-nil, Emacs will visit the file.
 With a double prefix argument, try to open outside of Emacs, in the
 application the system uses for this file type."
   (interactive "P")
-  ;; if in a code block, then open the block's results
-  (unless (call-interactively #'org-babel-open-src-block-result)
   (org-load-modules-maybe)
   (move-marker org-open-link-marker (point))
   (setq org-window-config-before-follow-link (current-window-configuration))
@@ -9117,6 +9115,9 @@ application the system uses for this file type."
    (t
     (let (type path link line search (pos (point)))
       (catch 'match
+	(when (org-babel-where-is-src-block-head)
+	  (setq type "src" path "")
+	  (throw 'match t))
 	(save-excursion
 	  (skip-chars-forward "^]\n\r")
 	  (when (org-in-regexp org-bracket-link-regexp 1)
@@ -9180,6 +9181,9 @@ application the system uses for this file type."
 
 	 ((assoc type org-link-protocols)
 	  (funcall (nth 1 (assoc type org-link-protocols)) path))
+
+	 ((equal type "src")
+	  (org-babel-open-src-block-result arg))
 
 	 ((equal type "mailto")
 	  (let ((cmd (car org-link-mailto-program))
@@ -9274,7 +9278,7 @@ application the system uses for this file type."
 	 (t
 	  (browse-url-at-point)))))))
   (move-marker org-open-link-marker nil)
-  (run-hook-with-args 'org-follow-link-hook)))
+  (run-hook-with-args 'org-follow-link-hook))
 
 (defun org-offer-links-in-entry (&optional nth zero)
   "Offer links in the current entry and follow the selected link.
