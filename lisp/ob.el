@@ -857,23 +857,30 @@ portions of results lines."
   "Retrieve parameters specified as properties.
 Return an association list of any source block params which
 may be specified in the properties of the current outline entry."
-  (save-match-data
-    (let (val sym)
-      (delq nil
-	    (mapcar
-	     (lambda (header-arg)
-	       (and (setq val
-			  (or (org-entry-get (point) header-arg t)
-			      (org-entry-get (point) (concat ":" header-arg) t)))
-		    (cons (intern (concat ":" header-arg))
-			  (org-babel-read val))))
-	     (mapcar
-	      'symbol-name
-	      (append
-	       org-babel-header-arg-names
-	       (progn
-		 (setq sym (intern (concat "org-babel-header-arg-names:" lang)))
-		 (and (boundp sym) (eval sym))))))))))
+  (flet ((make-entry
+	  (key val)
+	  (cons (intern (concat ":" key))
+		(org-babel-read val))))
+    (save-match-data
+      (let (val sym)
+       (delq nil
+	     (append
+	      (mapcar
+	       (lambda (header-arg)
+		 (and (not (equal header-arg "var"))
+		      (setq val
+			    (or (org-entry-get (point) header-arg t)
+				(org-entry-get (point) (concat ":" header-arg) t)))
+		      (make-entry header-arg val)))
+	       (mapcar
+		'symbol-name
+		(append
+		 org-babel-header-arg-names
+		 (progn
+		   (setq sym (intern (concat "org-babel-header-arg-names:" lang)))
+		   (and (boundp sym) (eval sym))))))
+	      (mapcar (lambda (val) (make-entry "var" val))
+		      (org-entry-get-all-with-inheritance "var"))))))))
 
 (defun org-babel-params-from-buffer ()
   "Retrieve per-buffer parameters.
