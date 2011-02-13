@@ -13698,6 +13698,38 @@ However, if LITERAL-NIL is set, return the string value \"nil\" instead."
 		  (cdr (assoc property org-global-properties-fixed))))
     (if literal-nil tmp (org-not-nil tmp))))
 
+(defun org-entry-get-all-with-inheritance (property &optional literal-nil)
+  "Get all values of PROPERTY in enclosing scope."
+  (flet ((get-all
+	  (property alist)
+	  (delq nil
+		(mapcar
+		 (lambda (pair) (if (equal (car pair) property) (cdr pair)))
+		 alist))))
+    (let (tmp)
+      (mapcar
+       (lambda (x) (if literal-nil x (org-not-nil x)))
+       (delq nil
+	     (apply #'append
+		    (unless (org-before-first-heading-p)
+		      (save-excursion
+			(save-restriction
+			  (widen)
+			  (catch 'ex
+			    (while t
+			      (setq
+			       tmp
+			       (append tmp
+				       (list (org-entry-get nil property nil 'literal-nil))))
+			      (org-back-to-heading t)
+			      (or (org-up-heading-safe) (throw 'ex nil))))))
+		      tmp)
+		    (mapcar
+		     (lambda (source) (get-all property source))
+		     (list org-file-properties
+			   org-global-properties
+			   org-global-properties-fixed))))))))
+
 (defvar org-property-changed-functions nil
   "Hook called when the value of a property has changed.
 Each hook function should accept two arguments, the name of the property
